@@ -161,7 +161,11 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 
 
 @app.post("/timesheet/", dependencies=[Depends(get_current_active_user)])
-async def timesheet_app(user_infor: Timesheet = Body(...)):
+def timesheet_app(user_infor: Timesheet = Body(...)): 
+    '''
+    # If you are using a third party library that communicates with something and doesn't have support or dno't know for using await
+    # (this is currently the case for most database libraries), then declare your path operation functions as normally, with just def
+    '''
     print(user_infor.dict())
     result = selenium_timesheet.selenium_timesheet_instance(username = user_infor.username, token=user_infor.MFAtoken)
     return {"message": result }
