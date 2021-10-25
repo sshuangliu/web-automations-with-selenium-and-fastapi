@@ -26,7 +26,7 @@ def selenium_timesheet_instance(username, token):
 	)
 
 	with open('stealth.min.js') as f:
-    	js = f.read()
+		js = f.read()
 
 	driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
 	"source": js
@@ -105,4 +105,4 @@ def selenium_timesheet_instance(username, token):
 
 if __name__ == '__main__':
 	one_time_token = input("please a token:")
-	selenium_timesheet_instance(username = '', token=one_time_token)
+	selenium_timesheet_instance(username = '1865221', token=one_time_token)
