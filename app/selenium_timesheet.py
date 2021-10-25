@@ -34,7 +34,7 @@ def selenium_timesheet_instance(username, token):
 	chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
 	chrome_options.add_argument('--disable-gpu')
 	driver = webdriver.Remote(
-	command_executor="http://111.229.52.229:4444/wd/hub", # the selenium docker's ip add_argument
+	command_executor="http://172.18.0.2:4444/wd/hub", # the selenium docker's ip add_argument
 	desired_capabilities=DesiredCapabilities.CHROME,
 	options=chrome_options
 	)
