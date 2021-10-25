@@ -1,6 +1,4 @@
 from selenium import webdriver
-from selenium.webdriver.remote.webdriver import WebDriver
-import json
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.by import By
@@ -14,27 +12,15 @@ import random
 #docker run -d -p 4444:4444 -p 7900:7900 --shm-size="512m" selenium/standalone-chrome:4.0.0-rc-3-20211010
 
 
-def send(driver, cmd, params={}):
-	resource = "/session/%s/chromium/send_command_and_get_result" % driver.session_id
-	url = driver.command_executor._url + resource
-	body = json.dumps({'cmd': cmd, 'params': params})
-	response = driver.command_executor._request('POST', url, body)
-	return response.get('value')
-
-def add_script(driver, script):
-	send(driver, "Page.addScriptToEvaluateOnNewDocument", {"source": script})
-
 
 def selenium_timesheet_instance(username, token):
 	current_day = datetime.now().strftime('%d/%m/%Y')
 	url = "https://auth.ultimatix.net/utxLogin"
-	suburl = 'https://timesheet.ultimatix.net/timesheet/Login/bridge?'
-	WebDriver.add_script = add_script
+	suburl = 'https://timesheet.ultimatix.net/timesheet'
 	chrome_options = webdriver.ChromeOptions()
-	chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
 	chrome_options.add_argument('--disable-gpu')
 	driver = webdriver.Remote(
-	command_executor="http://111.229.52.229:4444/wd/hub", # the selenium docker's ip add_argument
+	command_executor="http://172.18.0.2:4444/wd/hub", # the selenium docker's ip add_argument
 	desired_capabilities=DesiredCapabilities.CHROME,
 	options=chrome_options
 	)
@@ -42,12 +28,21 @@ def selenium_timesheet_instance(username, token):
 	with open('stealth.min.js') as f:
 		js = f.read()
 
-	driver.add_script(js)
+	driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
+	"source": js
+	})
 
 	#driver.implicitly_wait(random.random())
-
 	driver.get(url)
 
+	try:
+		select_login_method = WebDriverWait(driver, 10, 0.5).until(
+			EC.element_to_be_clickable((By.XPATH, '//*[@id="auth-code-btn"]'))
+			)
+		if select_login_method:
+			select_login_method.click()
+	except TimeoutException:
+		print("Loading took too much time!")
 
 	try:
 		element_process_button = WebDriverWait(driver, 10, 0.5).until(
@@ -55,7 +50,7 @@ def selenium_timesheet_instance(username, token):
 		)
 
 	except TimeoutException:
-		print("Loading took too much time001!")
+		print("Loading took too much time!")
 
 	else:
 		element_username_input = driver.find_element_by_xpath('//*[@id="form1"]')
@@ -63,36 +58,26 @@ def selenium_timesheet_instance(username, token):
 		element_username_input.send_keys(username)
 		element_process_button.click()
 		#time.sleep(2)
-
-		try:
-			select_login_method = WebDriverWait(driver, 2, 0.5).until(
-				EC.element_to_be_clickable((By.XPATH, '//*[@id="auth-code-btn"]'))
-				)
-			if select_login_method:
-				select_login_method.click()
-		except TimeoutException:
-			print("Loading took too much time002!")
-
 		try:
 			element_token_input = WebDriverWait(driver, 5).until(
 			EC.visibility_of_element_located((By.XPATH, '//*[@id="authcode1"]'))
 			)
 		except TimeoutException:
-			print("Loading took too much time003!")
+			print("Loading took too much time!")
 		element_token_input.send_keys(token)
 		time.sleep(random.random())
 		element_login_button = driver.find_element_by_xpath('//*[@id="form-submit"]')
 		element_login_button.click()
 
 		# after logined
-		driver.get(suburl)		
-
+		driver.get(suburl)
+		#time.sleep(3)
 		try:
 			element_popup = WebDriverWait(driver, 15).until(
 			EC.element_to_be_clickable((By.XPATH, '//*[@id="hwModal"]/div[1]/span[2]/img'))
 			)
 		except TimeoutException:
-			print("Loading took too much time004!")
+			print("Loading took too much time!")
 
 		element_popup.click()
 		element_effort = driver.find_element_by_xpath('//*[@id="effortforOwnWonSwon11"]')
@@ -104,7 +89,7 @@ def selenium_timesheet_instance(username, token):
 			element_submit.click()
 
 		except TimeoutException:
-			print("Loading took too much time005!")
+			print("Loading took too much time!")
 
 		time.sleep(3)
 		element_effort_value = driver.find_element_by_xpath(f'//*[@id="{current_day}"]')
@@ -115,7 +100,6 @@ def selenium_timesheet_instance(username, token):
 		#driver.save_screenshot('screenshot.png')
 	finally:
 		driver.quit()
-		print('ok')
 	return result
 
 
