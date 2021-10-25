@@ -16,7 +16,7 @@ import selenium_timesheet
 # openssl rand -hex 32
 SECRET_KEY = "c4af8692b37bcf2d575c5958254eee21a049cf01925207beb8e4f02a5c0c9593"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 500000
 
 # secret01
 fake_users_db = {
@@ -168,7 +168,7 @@ def timesheet_app(user_infor: Timesheet = Body(...)):
     '''
     print(user_infor.dict())
     result = selenium_timesheet.selenium_timesheet_instance(username = user_infor.username, token=user_infor.MFAtoken)
-    return {"message": result }
+    return {"result": result , 'message': 'clock in succeeded'}
 
 
 if __name__ == '__main__':

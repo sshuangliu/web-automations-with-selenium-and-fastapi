@@ -6,7 +6,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 from datetime import datetime
-
+import random
 #https://github.com/SeleniumHQ/docker-selenium
 #https://www.cnblogs.com/nbkhic/p/4885041.html
 #docker run -d -p 4444:4444 -p 7900:7900 --shm-size="512m" selenium/standalone-chrome:4.0.0-rc-3-20211010
@@ -23,9 +23,26 @@ def selenium_timesheet_instance(username, token):
 	command_executor="http://172.18.0.2:4444/wd/hub", # the selenium docker's ip add_argument
 	desired_capabilities=DesiredCapabilities.CHROME,
 	options=chrome_options
-)
+	)
 
+	with open('stealth.min.js') as f:
+    	js = f.read()
+
+	driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
+	"source": js
+	})
+
+	#driver.implicitly_wait(random.random())
 	driver.get(url)
+
+	try:
+		select_login_method = WebDriverWait(driver, 10, 0.5).until(
+			EC.element_to_be_clickable((By.XPATH, '//*[@id="auth-code-btn"]'))
+			)
+		if select_login_method:
+			select_login_method.click()
+	except TimeoutException:
+		print("Loading took too much time!")
 
 	try:
 		element_process_button = WebDriverWait(driver, 10, 0.5).until(
@@ -47,8 +64,8 @@ def selenium_timesheet_instance(username, token):
 			)
 		except TimeoutException:
 			print("Loading took too much time!")
-
 		element_token_input.send_keys(token)
+		time.sleep(random.random())
 		element_login_button = driver.find_element_by_xpath('//*[@id="form-submit"]')
 		element_login_button.click()
 
@@ -88,4 +105,4 @@ def selenium_timesheet_instance(username, token):
 
 if __name__ == '__main__':
 	one_time_token = input("please a token:")
-	selenium_timesheet_instance(username = '1865221', token=one_time_token)
+	selenium_timesheet_instance(username = '', token=one_time_token)
